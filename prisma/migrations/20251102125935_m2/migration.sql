@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Clinic" ADD COLUMN     "currency" TEXT DEFAULT 'EUR',
+ADD COLUMN     "stripeTestMode" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN     "taxRate" DOUBLE PRECISION DEFAULT 0;

@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String  @id @default(cuid())
+  email    String  @unique
+  name     String?
+  password String?
+  tenantId String?
+
+  // Relations
+  memberships    Membership[]
+  createdClinics Clinic[]     @relation("ClinicCreatedBy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Clinic {
+  id          String       @id @default(cuid())
+  name        String
+  tenantId    String       @unique
+  memberships Membership[]
+
+  createdById String?
+  createdBy   User?   @relation("ClinicCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  // chaque clinique a plusieurs services
+  services Service[]
+
+  currency       String? @default("TND")
+  taxRate        Float?  @default(0)
+  stripeTestMode Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdById])
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  permissions RolePermission[]
+  memberships Membership[]
+}
+
+model Permission {
+  id    String           @id @default(cuid())
+  name  String           @unique
+  roles RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model Membership {
+  id       String @id @default(cuid())
+  userId   String
+  clinicId String
+  roleId   String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, clinicId])
+  @@index([userId])
+  @@index([clinicId])
+  @@index([roleId])
+}
+
+model Service {
+  id       String @id @default(cuid())
+  name     String
+  duration Int
+  price    Float
+  clinicId String
+
+
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clinicId])
+}
