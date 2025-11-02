@@ -66,6 +66,10 @@ npm install
 ### 3️⃣ Configurer les variables d’environnement
 
 ````
+DATABASE_URL="postgresql://user:password@localhost:5432/medflow"
+NEXTAUTH_SECRET="ta_secret_key"
+NEXTAUTH_URL="http://localhost:3000"
+
 ````
 #### 4️⃣ Lancer le serveur
 ````
