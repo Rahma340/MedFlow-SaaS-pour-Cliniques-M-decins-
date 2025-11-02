@@ -1,6 +1,6 @@
 'use client';
-
 import { useState } from "react";
+import StaffList from "./staff/StaffList";
 
 export default function DashboardClient({ session, clinic }: any) {
   const [active, setActive] = useState<"dashboard" | "staff" | "services" | "settings">("dashboard");
@@ -43,6 +43,7 @@ export default function DashboardClient({ session, clinic }: any) {
     </div>
   );
 }
+
 function DashboardOverview({ clinic, session }: any) {
   return (
     <>
@@ -61,34 +62,6 @@ function DashboardOverview({ clinic, session }: any) {
         <p className="text-gray-500">À venir : affichage dynamique du journal d’activité.</p>
       </div>
     </>
-  );
-}
-
-function StaffList({ clinic }: any) {
-  return (
-    <div>
-      <h2 className="text-2xl font-bold mb-6 text-gray-900">Staff</h2>
-      <table className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
-        <thead className="bg-blue-50">
-          <tr className="text-left text-gray-600">
-            <th className="p-3">Nom</th>
-            <th className="p-3">Email</th>
-            <th className="p-3">Rôle</th>
-            <th className="p-3">Date d’ajout</th>
-          </tr>
-        </thead>
-        <tbody>
-          {clinic.memberships.map((m: any) => (
-            <tr key={m.id} className="border-t hover:bg-gray-50">
-              <td className="p-3">{m.user?.name || "-"}</td>
-              <td className="p-3">{m.user?.email}</td>
-              <td className="p-3">{m.role?.name}</td>
-              <td className="p-3">{new Date(m.createdAt).toLocaleDateString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
   );
 }
 
@@ -144,4 +117,3 @@ function StatCard({ title, value, subtitle }: any) {
     </div>
   );
 }
-
