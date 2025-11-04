@@ -14,7 +14,6 @@ model User {
   password String?
   tenantId String?
 
-  // Relations
   memberships    Membership[]
   createdClinics Clinic[]     @relation("ClinicCreatedBy")
 
@@ -27,12 +26,12 @@ model Clinic {
   name        String
   tenantId    String       @unique
   memberships Membership[]
-
   createdById String?
-  createdBy   User?   @relation("ClinicCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   User?        @relation("ClinicCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
-  // chaque clinique a plusieurs services
-  services Service[]
+  services     Service[]
+  patients     Patient[]
+  appointments Appointment[]
 
   currency       String? @default("TND")
   taxRate        Float?  @default(0)
@@ -74,11 +73,13 @@ model Membership {
   roleId   String
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  updatedAt DateTime @updatedAt
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
   role   Role   @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  appointments Appointment[]
 
   @@unique([userId, clinicId])
   @@index([userId])
@@ -93,11 +94,51 @@ model Service {
   price    Float
   clinicId String
 
-
   clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  appointments Appointment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([clinicId])
+}
+
+model Patient {
+  id        String    @id @default(cuid())
+  firstName String
+  lastName  String
+  email     String?   @unique
+  phone     String?
+  birthDate DateTime?
+  gender    String?
+  address   String?
+  clinicId  String
+  clinic    Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  appointments Appointment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Appointment {
+  id       String   @id @default(cuid())
+  date     DateTime
+  status   String   @default("scheduled") // scheduled, done, cancelled
+  notes    String?
+  clinicId String
+  clinic   Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  staffId String?
+  staff   Membership? @relation(fields: [staffId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

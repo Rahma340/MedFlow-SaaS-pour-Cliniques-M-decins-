@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   const { members } = await req.json()
 
   for (const m of members) {
-    const roleName = m.role === 'Doctor' ? 'DOCTOR' : 'RECEPTIONIST'
+    const roleName = m.role === 'doctor' ? 'doctor' : 'RECEPTIONIST'
 
     // Trouve ou crée le rôle
     let role = await prisma.role.findUnique({ where: { name: roleName } })

@@ -9,7 +9,7 @@ type StaffMember = {
   firstName: string
   lastName: string
   email: string
-  role: 'Doctor' | 'Receptionist'
+  role: 'doctor' | 'Receptionist'
 }
 
 interface StepTeamProps {
@@ -19,7 +19,7 @@ interface StepTeamProps {
 
 export default function StepTeam({ onNext }: StepTeamProps) {
   const [members, setMembers] = useState<StaffMember[]>([
-    { firstName: '', lastName: '', email: '', role: 'Doctor' },
+    { firstName: '', lastName: '', email: '', role: 'doctor' },
   ])
   const [loading, setLoading] = useState(false)
 
@@ -36,7 +36,7 @@ export default function StepTeam({ onNext }: StepTeamProps) {
   function addMember() {
     setMembers([
       ...members,
-      { firstName: '', lastName: '', email: '', role: 'Doctor' },
+      { firstName: '', lastName: '', email: '', role: 'doctor' },
     ])
   }
 
@@ -70,7 +70,7 @@ export default function StepTeam({ onNext }: StepTeamProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <h2 className="text-xl font-semibold">👩‍⚕️ Équipe médicale</h2>
       <p className="text-sm text-muted-foreground">
-        Ajoutez les membres de votre équipe (médecins, réceptionnistes).
+        Ajoutez les membres de votre équipe (doctors, réceptionnistes).
       </p>
 
       {members.map((m, i) => (
@@ -113,7 +113,7 @@ export default function StepTeam({ onNext }: StepTeamProps) {
               }
               className="border p-2 rounded w-full"
             >
-              <option value="Doctor">Médecin</option>
+              <option value="doctor">doctor</option>
               <option value="Receptionist">Réceptionniste</option>
             </select>
           </div>

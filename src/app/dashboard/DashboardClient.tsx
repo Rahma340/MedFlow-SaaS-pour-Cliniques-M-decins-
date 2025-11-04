@@ -1,27 +1,37 @@
-'use client';
+"use client";
+
 import { useState } from "react";
 import StaffList from "./staff/StaffList";
+import PatientsList from "./patients/PatientsList";
+import AppointmentsList from "./appointments/AppointmentsList";
+import ServiceList from "./services/ServiceList";
 
 export default function DashboardClient({ session, clinic }: any) {
-  const [active, setActive] = useState<"dashboard" | "staff" | "services" | "settings">("dashboard");
+  const [active, setActive] = useState<
+    "dashboard" | "staff" | "services" | "settings" | "patients" | "appointments"
+  >("dashboard");
+
+  const navItems = [
+    { key: "dashboard", label: "Dashboard" },
+    { key: "staff", label: `Staff (${clinic.memberships?.length || 0})` },
+    { key: "services", label: `Services (${clinic.services?.length || 0})` },
+    { key: "patients", label: `Patients (${clinic.patients?.length || 0})` },
+    { key: "appointments", label: "Rendez-vous" },
+    { key: "settings", label: "Paramètres" },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className="w-64 bg-[#E3F2FD] shadow-sm min-h-screen p-6">
+      <aside className="w-64 bg-[#E3F2FD] shadow-sm min-h-screen p-6">
         <h1 className="text-xl font-bold text-gray-800 mb-8">{clinic.name}</h1>
 
         <nav className="space-y-2">
-          {[
-            { key: "dashboard", label: "Dashboard" },
-            { key: "staff", label: `Staff (${clinic.memberships.length})` },
-            { key: "services", label: `Services (${clinic.services.length})` },
-            { key: "settings", label: "Settings" },
-          ].map((item) => (
+          {navItems.map((item) => (
             <button
               key={item.key}
               onClick={() => setActive(item.key as any)}
-              className={`w-full text-left flex items-center gap-3 p-3 rounded-lg ${
+              className={`w-full text-left flex items-center gap-3 p-3 rounded-lg transition ${
                 active === item.key
                   ? "bg-blue-500 text-white"
                   : "text-gray-700 hover:bg-blue-100"
@@ -31,15 +41,20 @@ export default function DashboardClient({ session, clinic }: any) {
             </button>
           ))}
         </nav>
-      </div>
+      </aside>
 
       {/* Main content */}
-      <div className="flex-1 p-8">
+      <main className="flex-1 p-8">
         {active === "dashboard" && <DashboardOverview clinic={clinic} session={session} />}
         {active === "staff" && <StaffList clinic={clinic} />}
-        {active === "services" && <ServiceList clinic={clinic} />}
+        {active === "services" && (
+        <ServiceList clinicId={clinic.id} currency={clinic.currency} />
+)}
+
+        {active === "patients" && <PatientsList clinicId={clinic.id} />}
+        {active === "appointments" && <AppointmentsList clinicId={clinic.id} />}
         {active === "settings" && <SettingsView clinic={clinic} />}
-      </div>
+      </main>
     </div>
   );
 }
@@ -48,50 +63,25 @@ function DashboardOverview({ clinic, session }: any) {
   return (
     <>
       <h2 className="text-2xl font-bold mb-4 text-gray-900">
-        Welcome, {session.user?.name}
+        Bienvenue, {session.user?.name}
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <StatCard title="Staff" value={clinic.memberships.length} subtitle="Members" />
-        <StatCard title="Services" value={clinic.services.length} subtitle="Offered" />
-        <StatCard title="Tax" value={`${clinic.taxRate}%`} subtitle="TVA" />
+        <StatCard title="Staff" value={clinic.memberships.length} subtitle="Membres" />
+        <StatCard title="Services" value={clinic.services.length} subtitle="Offerts" />
+        <StatCard title="TVA" value={`${clinic.taxRate}%`} subtitle="Taxe" />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Activité récente</h3>
         <p className="text-gray-500">À venir : affichage dynamique du journal d’activité.</p>
       </div>
     </>
   );
 }
 
-function ServiceList({ clinic }: any) {
-  return (
-    <div>
-      <h2 className="text-2xl font-bold mb-6 text-gray-900">Services</h2>
-      <table className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
-        <thead className="bg-blue-50">
-          <tr className="text-left text-gray-600">
-            <th className="p-3">Nom</th>
-            <th className="p-3">Durée</th>
-            <th className="p-3">Prix</th>
-            <th className="p-3">Créé le</th>
-          </tr>
-        </thead>
-        <tbody>
-          {clinic.services.map((s: any) => (
-            <tr key={s.id} className="border-t hover:bg-gray-50">
-              <td className="p-3">{s.name}</td>
-              <td className="p-3">{s.duration} min</td>
-              <td className="p-3">{s.price} {clinic.currency}</td>
-              <td className="p-3">{new Date(s.createdAt).toLocaleDateString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+
+
 
 function SettingsView({ clinic }: any) {
   return (

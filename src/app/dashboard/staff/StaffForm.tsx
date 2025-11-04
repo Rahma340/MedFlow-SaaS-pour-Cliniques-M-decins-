@@ -5,7 +5,7 @@ import { createStaff, updateStaff } from "./actions";
 export default function StaffForm({ staff, clinicId, onClose }: any) {
   const [email, setEmail] = useState(staff?.user?.email || "");
   const [name, setName] = useState(staff?.user?.name || "");
-  const [role, setRole] = useState(staff?.role?.name || "Médecin");
+  const [role, setRole] = useState(staff?.role?.name || "doctor");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -62,7 +62,7 @@ export default function StaffForm({ staff, clinicId, onClose }: any) {
               value={role}
               onChange={(e) => setRole(e.target.value)}
             >
-              <option>Médecin</option>
+              <option>doctor</option>
               <option>Réceptionniste</option>
               <option>Infirmier</option>
               <option>Administrateur</option>

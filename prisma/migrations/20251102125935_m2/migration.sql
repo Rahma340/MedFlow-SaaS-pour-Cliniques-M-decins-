@@ -1,4 +1,4 @@
 -- AlterTable
-ALTER TABLE "Clinic" ADD COLUMN     "currency" TEXT DEFAULT 'EUR',
+ALTER TABLE "Clinic" ADD COLUMN     "currency" TEXT DEFAULT 'TND',
 ADD COLUMN     "stripeTestMode" BOOLEAN NOT NULL DEFAULT true,
 ADD COLUMN     "taxRate" DOUBLE PRECISION DEFAULT 0;

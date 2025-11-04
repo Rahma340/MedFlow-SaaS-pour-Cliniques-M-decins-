@@ -19,7 +19,7 @@ interface StepSettingsProps {
 export default function StepSettings({ onNext }: StepSettingsProps) {
   const [settings, setSettings] = useState<Settings>({
     taxRate: 0,
-    currency: 'EUR',
+    currency: 'TND',
     stripeTestMode: true,
   })
   const [loading, setLoading] = useState(false)
@@ -58,7 +58,7 @@ export default function StepSettings({ onNext }: StepSettingsProps) {
             onChange={(e) =>
               setSettings({ ...settings, currency: e.target.value })
             }
-            placeholder="EUR, USD, etc."
+            placeholder="TND, USD, etc."
           />
         </div>
         <div>

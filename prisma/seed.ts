@@ -23,7 +23,7 @@ const ROLE_MATRIX: Record<string, string[]> = {
     "billing:manage",
     "settings:manage",
   ],
-  DOCTOR: [
+  doctor: [
     "dashboard:view",
     "patient:read",
     "appointment:manage",
