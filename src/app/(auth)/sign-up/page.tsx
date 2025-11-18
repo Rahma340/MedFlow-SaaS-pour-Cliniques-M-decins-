@@ -15,10 +15,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const Schema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(6),
+  firstName: z.string().min(2, "Prénom trop court"),
+  lastName: z.string().min(2, "Nom trop court"),
+  email: z.string().email("Email invalide"),
+  password: z.string().min(6, "Min 6 caractères"),
 });
+
 type FormData = z.infer<typeof Schema>;
 
 export default function SignUpPage() {
@@ -46,21 +48,13 @@ export default function SignUpPage() {
       return;
     }
 
-    // Connexion automatique après création du compte
-    const signInRes = await signIn("credentials", {
+    await signIn("credentials", {
       redirect: false,
       email: data.email,
       password: data.password,
     });
 
-    if (!signInRes?.error) {
-      // edirection vers onboarding directement
-      router.push("/onboarding");
-    } else {
-      // fallback si signIn échoue
-      router.push("/sign-in");
-    }
-
+    router.push("/onboarding");
     setLoading(false);
   };
 
@@ -77,22 +71,26 @@ export default function SignUpPage() {
           </h1>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
             <div className="space-y-1">
-              <Label className="text-xs text-slate-600">Name</Label>
-              <Input placeholder="your name" className="h-9" {...register("name")} />
-              {errors.name && (
-                <p className="text-xs text-red-600">{errors.name.message}</p>
+              <Label className="text-xs text-slate-600">First Name</Label>
+              <Input className="h-9" {...register("firstName")} />
+              {errors.firstName && (
+                <p className="text-xs text-red-600">{errors.firstName.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-600">Last Name</Label>
+              <Input className="h-9" {...register("lastName")} />
+              {errors.lastName && (
+                <p className="text-xs text-red-600">{errors.lastName.message}</p>
               )}
             </div>
 
             <div className="space-y-1">
               <Label className="text-xs text-slate-600">Email</Label>
-              <Input
-                type="email"
-                placeholder="enter your email"
-                className="h-9"
-                {...register("email")}
-              />
+              <Input type="email" className="h-9" {...register("email")} />
               {errors.email && (
                 <p className="text-xs text-red-600">{errors.email.message}</p>
               )}
@@ -100,12 +98,7 @@ export default function SignUpPage() {
 
             <div className="space-y-1">
               <Label className="text-xs text-slate-600">Password</Label>
-              <Input
-                type="password"
-                placeholder="choose a password"
-                className="h-9"
-                {...register("password")}
-              />
+              <Input type="password" className="h-9" {...register("password")} />
               {errors.password && (
                 <p className="text-xs text-red-600">{errors.password.message}</p>
               )}
@@ -118,10 +111,7 @@ export default function SignUpPage() {
 
           <div className="mt-4 flex items-center justify-center gap-1 text-[11px] text-slate-500">
             <span>Already have an account?</span>
-            <a
-              href="/sign-in"
-              className="font-semibold text-sky-700 hover:underline"
-            >
+            <a href="/sign-in" className="font-semibold text-sky-700 hover:underline">
               Sign in
             </a>
           </div>

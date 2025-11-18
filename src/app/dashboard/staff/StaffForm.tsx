@@ -1,42 +1,53 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createStaff, updateStaff } from "./actions";
 
 export default function StaffForm({ staff, clinicId, onClose }: any) {
+  const router = useRouter();
   const [email, setEmail] = useState(staff?.user?.email || "");
-  const [name, setName] = useState(staff?.user?.name || "");
-  const [role, setRole] = useState(staff?.role?.name || "doctor");
+  const [firstName, setFirstName] = useState(staff?.user?.firstName || "");
+  const [lastName, setLastName] = useState(staff?.user?.lastName || "");
+  const [role, setRole] = useState(staff?.role?.name || "DOCTOR");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
 
-    if (staff) {
-      await updateStaff(staff.id, { name, role });
-    } else {
-      await createStaff({ email, name, role, clinicId });
-    }
+    try {
+      if (staff) {
+        // Update staff
+        await updateStaff(staff.id, { firstName, lastName, role });
+      } else {
+        // Create staff
+        await createStaff({ clinicId, email, firstName, lastName, role });
+      }
 
-    setLoading(false);
-    onClose();
-    window.location.reload();
+      onClose();
+      router.refresh(); // ✅ Recharge les données sans reload complet
+    } catch (err) {
+      console.error("Erreur:", err);
+      alert("Une erreur est survenue");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg w-[400px] shadow-lg">
-        <h2 className="text-lg font-semibold mb-4">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+      <div className="bg-white p-6 rounded-lg w-[420px] shadow-xl space-y-4">
+        <h2 className="text-lg font-semibold">
           {staff ? "Modifier le membre" : "Ajouter un membre"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!staff && (
             <div>
-              <label className="block text-sm font-medium mb-1">Email</label>
+              <label>Email</label>
               <input
                 type="email"
-                className="border rounded p-2 w-full"
+                className="input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -44,44 +55,41 @@ export default function StaffForm({ staff, clinicId, onClose }: any) {
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Nom</label>
-            <input
-              type="text"
-              className="border rounded p-2 w-full"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label>Prénom</label>
+              <input
+                className="input"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+            </div>
+
+            <div className="flex-1">
+              <label>Nom</label>
+              <input
+                className="input"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Rôle</label>
-            <select
-              className="border rounded p-2 w-full"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-            >
-              <option>doctor</option>
-              <option>Réceptionniste</option>
-              <option>Infirmier</option>
-              <option>Administrateur</option>
+            <label>Rôle</label>
+            <select className="input" value={role} onChange={(e) => setRole(e.target.value)}>
+              <option value="DOCTOR">Docteur</option>
+              <option value="RECEPTIONIST">Réceptionniste</option>
+              <option value="NURSE">Infirmier</option>
+              <option value="ADMIN">Administrateur</option>
             </select>
           </div>
 
           <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="border border-gray-300 px-4 py-2 rounded"
-            >
+            <button type="button" onClick={onClose} className="btn-secondary">
               Annuler
             </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-blue-600 text-white px-4 py-2 rounded"
-            >
+            <button type="submit" disabled={loading} className="btn-primary">
               {loading ? "En cours..." : "Enregistrer"}
             </button>
           </div>

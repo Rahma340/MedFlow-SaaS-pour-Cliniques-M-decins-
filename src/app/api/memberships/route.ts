@@ -5,24 +5,15 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const clinicId = searchParams.get("clinicId");
 
-  try {
-    const staff = await prisma.membership.findMany({
-      where: {
-        clinicId: clinicId || undefined,
-        role: {
-          name: "doctor", 
-        },
-      },
-      include: {
-        user: true,
-        role: true,
-      },
-      orderBy: { createdAt: "desc" },
-    });
+  if (!clinicId) return NextResponse.json([]);
 
-    return NextResponse.json(staff);
-  } catch (err) {
-    console.error("ERREUR /api/memberships :", err);
-    return NextResponse.json([], { status: 200 });
-  }
+  const memberships = await prisma.membership.findMany({
+    where: { clinicId },
+    include: {
+      user: true,
+      role: true,   
+    },
+  });
+
+  return NextResponse.json(memberships);
 }

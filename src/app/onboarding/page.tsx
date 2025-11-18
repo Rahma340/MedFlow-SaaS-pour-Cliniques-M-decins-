@@ -17,8 +17,8 @@ export default function OnboardingPage() {
     <div className="max-w-2xl mx-auto p-6">
       {step === 0 && <StepClinicInfo onNext={next} />}
       {step === 1 && <StepServices onNext={next} onPrev={prev} />}
-      {step === 2 && <StepSettings onNext={next} onPrev={prev} />}
       {step === 3 && <StepTeam onNext={next} onPrev={prev} />}
+      {step === 2 && <StepSettings onNext={next} onPrev={prev} />}
       {step === 4 && <StepFinish />}
     </div>
   )

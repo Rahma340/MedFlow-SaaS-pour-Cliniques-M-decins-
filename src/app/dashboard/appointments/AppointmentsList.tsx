@@ -1,7 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function AppointmentsList({ clinicId }: { clinicId: string }) {
+
+export default function AppointmentsList({
+  clinicId,
+  session,
+}: {
+  clinicId: string;
+  session: any;
+}) {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [form, setForm] = useState({
     date: "",
@@ -13,26 +21,11 @@ export default function AppointmentsList({ clinicId }: { clinicId: string }) {
   const [patients, setPatients] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
+  const router = useRouter();
 
-useEffect(() => {
-  async function loadData() {
-    const [a, p, s, st] = await Promise.all([
-      fetch(`/api/appointments?clinicId=${clinicId}`).then(r => r.json()),
-      fetch(`/api/patients?clinicId=${clinicId}`).then(r => r.json()),
-      fetch(`/api/services?clinicId=${clinicId}`).then(r => r.json()),
-      fetch(`/api/memberships?clinicId=${clinicId}`).then(r => r.json()),
-    ]);
 
-    setAppointments(a);
-    setPatients(p);
-    setServices(s);
 
-    
-    setStaff(st.filter((m: any) => m.role?.name === "doctor"));
-  }
 
-  loadData();
-}, [clinicId]);
 
   async function handleAdd() {
     if (!form.date || !form.patientId || !form.serviceId)
@@ -63,6 +56,26 @@ useEffect(() => {
     const updated = await res.json();
     setAppointments(appointments.map((a) => (a.id === id ? updated : a)));
   }
+  useEffect(() => {
+  async function loadData() {
+    const [a, p, s, st] = await Promise.all([
+      fetch(`/api/appointments?clinicId=${clinicId}`).then(r => r.json()),
+      fetch(`/api/patients?clinicId=${clinicId}`).then(r => r.json()),
+      fetch(`/api/services?clinicId=${clinicId}`).then(r => r.json()),
+      fetch(`/api/memberships?clinicId=${clinicId}`).then(r => r.json()),
+    ]);
+
+    setAppointments(a);
+    setPatients(p);
+    setServices(s);
+
+    // ✔ NE GARDE QUE LES DOCTEURS
+    setStaff(st.filter((m: any) => m.role?.name === "DOCTOR"));
+  }
+
+  loadData();
+}, [clinicId]);
+
 
   return (
     <div>
@@ -108,8 +121,8 @@ useEffect(() => {
           <option value="">Doctor</option>
           {staff.map((s) => (
             <option key={s.id} value={s.id}>
-              {s.user?.name}
-            </option>
+  {s.user?.firstName ?? ""} {s.user?.lastName ?? ""}
+</option>
           ))}
         </select>
         <input
@@ -142,7 +155,9 @@ useEffect(() => {
           {appointments.map((a) => (
             <tr key={a.id} className="border-t hover:bg-gray-50">
               <td className="p-3">{new Date(a.date).toLocaleString()}</td>
-              <td className="p-3">{a.patient?.firstName} {a.patient?.lastName}</td>
+              <td className="p-3">
+                {a.patient?.firstName} {a.patient?.lastName}
+              </td>
               <td className="p-3">{a.service?.name}</td>
               <td className="p-3">{a.staff?.user?.name || "-"}</td>
               <td className="p-3">
@@ -156,13 +171,29 @@ useEffect(() => {
                   <option value="cancelled">Annulé</option>
                 </select>
               </td>
-              <td className="p-3">
+
+              {/* ACTIONS */}
+              <td className="p-3 flex gap-2">
+
+                {/* 🔥 Bouton visible uniquement pour DOCTOR */}
+                {session?.user?.role === "DOCTOR" && (
+                  <button
+                    onClick={() =>
+                      router.push(`/consultation/${a.id}`)
+                    }
+                    className="text-blue-600 hover:underline"
+                  >
+                    Démarrer
+                  </button>
+                )}
+
                 <button
                   onClick={() => handleDelete(a.id)}
                   className="text-red-500 hover:underline"
                 >
                   Supprimer
                 </button>
+
               </td>
             </tr>
           ))}

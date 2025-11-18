@@ -1,55 +1,41 @@
-// app/api/users/invite/route.ts
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
+import { randomBytes } from "crypto";
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-  }
+  const { members } = await req.json();
 
-  const admin = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    include: { memberships: { include: { clinic: true } } },
-  })
+  try {
+    for (const member of members) {
+      // Vérifier si l'email existe déjà
+      const existingUser = await prisma.user.findUnique({
+        where: { email: member.email },
+      });
 
-  if (!admin || !admin.memberships.length) {
-    return NextResponse.json({ error: 'Clinique introuvable' }, { status: 400 })
-  }
+      if (existingUser) continue;
 
-  const clinic = admin.memberships[0].clinic
-  const { members } = await req.json()
+      // Générer un token de configuration
+      const token = randomBytes(32).toString("hex");
 
-  for (const m of members) {
-    const roleName = m.role === 'doctor' ? 'doctor' : 'RECEPTIONIST'
-
-    // Trouve ou crée le rôle
-    let role = await prisma.role.findUnique({ where: { name: roleName } })
-    if (!role) {
-      role = await prisma.role.create({ data: { name: roleName } })
-    }
-
-    // Vérifie si user existe déjà
-    let user = await prisma.user.findUnique({ where: { email: m.email } })
-    if (!user) {
-      user = await prisma.user.create({
+      // Créer un utilisateur en attente
+      await prisma.user.create({
         data: {
-          email: m.email,
-          name: `${m.firstName} ${m.lastName}`,
-          tenantId: clinic.tenantId,
+          email: member.email,
+          firstName: member.firstName,
+          lastName: member.lastName,
+          role: member.role,
+          status: "PENDING",
+          setupToken: token,
         },
-      })
+      });
+
+      // TODO: Envoyer email
+      console.log(`Send email to ${member.email}: https://your-domain.com/setup-account?token=${token}`);
     }
 
-    // Crée membership
-    await prisma.membership.upsert({
-      where: { userId_clinicId: { userId: user.id, clinicId: clinic.id } },
-      update: { roleId: role.id },
-      create: { userId: user.id, clinicId: clinic.id, roleId: role.id },
-    })
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "Erreur lors de l’invitation" }, { status: 500 });
   }
-
-  return NextResponse.json({ success: true })
 }

@@ -1,101 +1,75 @@
-import { NextAuthOptions, User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { NextAuthOptions } from "next-auth";
 
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
-      name: "credentials",
+      name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
+        email: {},
+        password: {},
       },
-      async authorize(credentials): Promise<User | null> {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
 
-        try {
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email },
-            include: {
-              memberships: {
-                include: {
-                  clinic: true,
-                }
-              }
-            }
-          });
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
 
-          if (!user || !user.password) {
-            return null;
-          }
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+          include: {
+            memberships: {
+              include: {
+                role: true,
+                clinic: true,
+              },
+            },
+          },
+        });
 
-          const isPasswordValid = await bcrypt.compare(
-            credentials.password,
-            user.password
-          );
+        if (!user || !user.password) return null;
 
-          if (!isPasswordValid) {
-            return null;
-          }
+        const valid = await bcrypt.compare(credentials.password, user.password);
+        if (!valid) return null;
 
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name || undefined,
-            tenantId: user.memberships[0]?.clinic?.tenantId || undefined,
-          };
-        } catch (error) {
-          console.error('Auth error:', error);
-          return null;
-        }
+        const membership = user.memberships?.[0];
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: `${user.firstName} ${user.lastName}`,
+          tenantId: membership?.clinic?.tenantId || null,
+          role: membership?.role?.name || null, // ⭐ AJOUT RÔLE
+        };
       },
     }),
   ],
+
+  session: {
+    strategy: "jwt",
+  },
+
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email;
         token.tenantId = user.tenantId;
+        token.role = user.role; // ⭐ AJOUT ROLE DANS TOKEN
       }
-      
-      console.log(' JWT callback:', { 
-        tokenId: token.id, 
-        tokenTenantId: token.tenantId 
-      });
-      
       return token;
     },
+
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.tenantId = token.tenantId as string;
-      }
-      
-      console.log(' Session callback:', { sessionUser: session.user });
-      
+      session.user.id = token.id;
+      session.user.email = token.email;
+      session.user.tenantId = token.tenantId;
+      session.user.role = token.role; // ⭐ AJOUT ROLE DANS SESSION
       return session;
     },
   },
+
   pages: {
     signIn: "/sign-in",
   },
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, 
-  },
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-      },
-    },
-  },
-  debug: process.env.NODE_ENV === "development",
 };

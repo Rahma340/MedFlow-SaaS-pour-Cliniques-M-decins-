@@ -10,9 +10,9 @@ const PERMS = [
   "prescription:write",
   "billing:manage",
   "settings:manage",
-] as const;
+];
 
-const ROLE_MATRIX: Record<string, string[]> = {
+const ROLE_MATRIX = {
   ADMIN: [
     "dashboard:view",
     "patient:read",
@@ -23,7 +23,7 @@ const ROLE_MATRIX: Record<string, string[]> = {
     "billing:manage",
     "settings:manage",
   ],
-  doctor: [
+  DOCTOR: [
     "dashboard:view",
     "patient:read",
     "appointment:manage",
@@ -41,7 +41,7 @@ const ROLE_MATRIX: Record<string, string[]> = {
 };
 
 async function main() {
-  // upsert permissions
+  console.log("🌱 Seeding permissions...");
   for (const p of PERMS) {
     await prisma.permission.upsert({
       where: { name: p },
@@ -50,7 +50,7 @@ async function main() {
     });
   }
 
-  // upsert roles and attach permissions
+  console.log("🌱 Seeding roles & linking permissions...");
   for (const [role, perms] of Object.entries(ROLE_MATRIX)) {
     const r = await prisma.role.upsert({
       where: { name: role },
@@ -58,21 +58,26 @@ async function main() {
       create: { name: role },
     });
 
-    // connect permissions
     const allPerms = await prisma.permission.findMany({
       where: { name: { in: perms } },
     });
 
-    // clear existing links then recreate
     await prisma.rolePermission.deleteMany({ where: { roleId: r.id } });
+
     for (const p of allPerms) {
       await prisma.rolePermission.create({
         data: { roleId: r.id, permissionId: p.id },
       });
     }
   }
+
+  console.log("✅ Roles & permissions seeds done!");
 }
 
-main().finally(async () => {
-  await prisma.$disconnect();
-});
+main()
+  .then(() => prisma.$disconnect())
+  .catch((e) => {
+    console.error("❌ Seed error:", e);
+    prisma.$disconnect();
+    process.exit(1);
+  });
